@@ -1,0 +1,15 @@
+flavors:
+  dev:
+    app:
+      name: "Codebase Dev"
+    android:
+      applicationId: "com.example.codebase.dev"
+    ios:
+      bundleId: "com.example.codebase.dev"
+  prod:
+    app:
+      name: "Codebase"
+    android:
+      applicationId: "com.example.codebase"
+    ios:
+      bundleId: "com.example.codebase"
