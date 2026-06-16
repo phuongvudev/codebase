@@ -75,6 +75,7 @@ AI agents in this repository can accelerate development workflows by:
 - Implementing networking layers with Dio + Retrofit patterns.
 - Wiring and maintaining dependency injection with GetIt.
 - Adding localization, permissions, and routing setup.
+- Auditing Flutter apps for security, pentest, and memory leak risks.
 - Creating widget previews, widget tests, and integration tests.
 - Assisting with debugging, error-handling patterns, and iterative improvements.
 
