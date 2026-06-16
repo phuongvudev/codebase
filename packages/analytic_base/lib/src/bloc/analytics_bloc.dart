@@ -7,8 +7,7 @@ import 'analytics_bloc_event.dart';
 
 final class AnalyticsBloc
     extends BaseAppBloc<AnalyticsBlocEvent, AnalyticsBlocData> {
-  AnalyticsBloc({required AbstractAnalyticsHandler analyticsHandler})
-      : _analyticsHandler = analyticsHandler {
+  AnalyticsBloc({required this._analyticsHandler}) {
     on<TrackAnalyticsEventRequested>(_onTrackEventRequested);
     on<TrackAnalyticsScreenRequested>(_onTrackScreenRequested);
     on<IdentifyAnalyticsUserRequested>(_onIdentifyUserRequested);

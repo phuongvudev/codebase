@@ -1,116 +1,228 @@
-# codebase
+# Senior Flutter Engineer Codebase
 
-A scalable, high-performance Flutter project applying modern architectural patterns and AI-powered development techniques.
+## 🌟 Introduction
+Welcome to the **Senior Flutter Engineer** codebase. This project serves as a production-grade template and playground for building scalable, high-performance, and maintainable Flutter applications. Our mission is to demonstrate "Production-First" engineering principles, where type-safety, modularity, and automated verification are not afterthoughts but core requirements.
 
-## 🚀 Tech Stack
+This repository is optimized for **specialized AI agents** to collaborate with human engineers, ensuring that every architectural decision follows a hybrid **Clean Architecture + Feature-First** approach.
 
-- **Framework**: [Flutter](https://flutter.dev) (2024-2025 optimized)
-- **Architecture**: Hybrid **Clean Architecture + Feature-First**
-- **State Management**: [BLoC](https://pub.dev/packages/flutter_bloc) with generic `BaseState` pattern
-- **Dependency Injection**: [GetIt](https://pub.dev/packages/get_it) service locator
-- **Networking**: [Dio](https://pub.dev/packages/dio) + [Retrofit](https://pub.dev/packages/retrofit) for type-safe API clients
-- **Routing**: [GoRouter](https://pub.dev/packages/go_router) for declarative, URL-based navigation
-- **Permissions**: `permission_handler` with platform-safe abstractions
-- **Internationalization**: `intl_utils` for type-safe localization
-- **UI Components**: Atomic Design Pattern with Responsive/Adaptive construction
+---
 
-## 🏗️ Architecture
+## 🚀 Tech Stack & Core Philosophy
+We utilize a modern, industry-standard tech stack (2024-2025) to ensure maximum reliability and developer velocity:
 
-The project follows a **Hybrid Clean Architecture + Feature-First** approach. Modular logic is isolated into layers within each feature:
+- **State Management**: [flutter_bloc](https://pub.dev/packages/flutter_bloc) with Dart 3 sealed classes for predictable state transitions.
+- **Dependency Injection**: [get_it](https://pub.dev/packages/get_it) for decoupled, interface-based service location.
+- **Networking**: [dio](https://pub.dev/packages/dio) + [retrofit](https://pub.dev/packages/retrofit) for type-safe API consumption.
+- **Routing**: [go_router](https://pub.dev/packages/go_router) with a modular, decentralized registration system.
+- **Responsive UI**: Custom `BaseResponsiveScreen` system for seamless adaptivity across mobile, tablet, and desktop.
+- **Localization**: Type-safe `S` class generation via `intl_utils`.
+- **Sitemap**: Automated codebase indexing via `flutter-scan-codebase-sitemap`.
 
-- **Domain**: Entities, Repositories (interfaces), and Use Cases. Pure Dart, no Flutter dependencies.
-- **Data**: Repository implementations, DTOs (Data Transfer Objects), and Data Sources (API clients, Local DB).
-- **Presentation**: BLoCs, Screens (using `BaseResponsiveScreen`), and Widgets (Atoms, Molecules, Organisms).
+---
 
-## ✨ Core Features
+## 🏗️ Hybrid Architecture
+We combine **Clean Architecture** (isolation of concerns) with a **Feature-First** structure (ease of discovery).
 
-### What this codebase can do
-- Build scalable Flutter features with a hybrid Clean Architecture + Feature-First structure.
-- Manage app state with BLoC and reusable base state patterns.
-- Resolve dependencies with GetIt for testable, decoupled modules.
-- Integrate REST APIs using Dio + Retrofit with generated, type-safe clients.
-- Support responsive UI layouts for small and large screens.
-- Handle runtime permissions with deterministic permission flows.
-- Enable localization with ARB files and generated localization classes.
+```text
+lib/src/
+  ├── core/                # Shared foundational logic (Base classes, Network, Router)
+  └── features/            # Feature-specific modules
+      └── feature_name/
+          ├── domain/      # Business Logic (Entities, Use Cases, Repositories Interfaces)
+          ├── data/        # Implementation (DTOs, Repositories, Data Sources)
+          └── presentation/ # UI (Screens, Widgets, BLoCs)
+```
 
-### Responsive Presentation Layer
-The project provides a base foundation for building responsive screens that react to state changes and screen size breakpoints.
+---
 
+## 📖 How to Build a New Feature
+Follow this standardized 3-step workflow to implement any new functionality.
+
+### Step 1: Domain Layer (The Contract)
+Define your data models (Entities) and the repository interface.
 ```dart
-class MyScreen extends BaseResponsiveScreen<MyBloc, MyState> {
-  @override
-  MyBloc bloc(BuildContext context) => MyBloc();
+// lib/src/features/profile/domain/profile.dart
+class Profile {
+  final String id;
+  final String name;
+  const Profile({required this.id, required this.name});
+}
 
-  @override
-  Widget buildSmallScreen(BuildContext context, MyState state) {
-    return Scaffold(body: Center(child: Text('Mobile Layout')));
-  }
+// lib/src/features/profile/domain/profile_repository.dart
+abstract class ProfileRepository {
+  Future<Result<Profile>> getProfile();
+}
+```
 
-  @override
-  Widget buildLargeScreen(BuildContext context, MyState state) {
-    return Scaffold(body: Center(child: Text('Desktop Layout')));
+### Step 2: Data Layer (The Implementation)
+Implement the repository and define the Retrofit API client.
+```dart
+// lib/src/features/profile/data/profile_api.dart
+@RestApi()
+abstract class ProfileApi {
+  @GET('/user/profile')
+  Future<ProfileDto> getProfile();
+}
+```
+
+### Step 3: Presentation Layer (The UI & Logic)
+Create your BLoC by extending `BaseAppBloc` and your screen by extending `BaseResponsiveScreen`.
+
+#### 1. Logic (BLoC)
+```dart
+class ProfileBloc extends BaseAppBloc<ProfileEvent, Profile> {
+  final ProfileRepository repository;
+  ProfileBloc(this.repository);
+
+  Future<void> _onLoad(LoadEvent event, Emitter emit) async {
+    emit(const LoadingState());
+    final result = await repository.getProfile();
+    result.fold(
+      (success) => emit(SuccessState(data: success)),
+      (failure) => emit(FailureState(failure.message)),
+    );
   }
 }
 ```
 
-### Deterministic Permission Flow
-`PermissionBloc` provides a feature-safe permission flow on top of `AbstractPermissionHandler`.
-
+#### 2. UI (Screen)
 ```dart
-final bloc = PermissionBloc(permissionHandler: getIt<AbstractPermissionHandler>());
-
-bloc.add(const RequestPermissionRequested(PermissionType.camera));
+class ProfileScreen extends BaseResponsiveScreen {
+  @override
+  Widget buildMobile(BuildContext context) {
+    return BlocBuilder<ProfileBloc, BaseState<Profile>>(
+      builder: (context, state) {
+        if (state is SuccessState<Profile>) {
+          return Text('Hello, ${state.data?.name}');
+        }
+        return const CircularProgressIndicator();
+      },
+    );
+  }
+}
 ```
-
-### Type-Safe Networking
-Leverages Retrofit and Dio for declarative API definitions with automated JSON serialization and centralized error handling.
-
-## 🤖 What AI agents can do
-
-AI agents in this repository can accelerate development workflows by:
-
-- Applying architecture best practices for new features and refactors.
-- Generating UI components, responsive layouts, and widget state behaviors.
-- Setting up and extending BLoC state management flows.
-- Implementing networking layers with Dio + Retrofit patterns.
-- Wiring and maintaining dependency injection with GetIt.
-- Adding localization, permissions, and routing setup.
-- Auditing Flutter apps for security, pentest, and memory leak risks.
-- Creating widget previews, widget tests, and integration tests.
-- Assisting with debugging, error-handling patterns, and iterative improvements.
-
-## 📁 Project Structure
-
-```text
-lib/
-├── generated/          # Auto-generated files (intl, JSON, etc.)
-├── l10n/               # Localization ARB files
-├── src/
-│   ├── core/           # Shared components (BLoC, Network, Router, etc.)
-│   └── features/       # Feature-based modules (Domain, Data, Presentation)
-└── codebase.dart       # Public API exports
-```
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Flutter SDK (latest stable)
-- `build_runner` for code generation
-
-### Setup
-1. Clone the repository.
-2. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
-3. Run code generation:
-   ```bash
-   dart run build_runner build --delete-conflicting-outputs
-   ```
-
-### Localization
-Add new strings to `lib/l10n/app_en.arb` and run `build_runner` or use the Flutter Intl IDE plugin to update generated files.
 
 ---
 
-*Built with a "Production-First" mindset.*
+## ✨ Core Components Guide
+
+### 🧱 State Management (`BaseState`)
+We use a sealed class `BaseState<T>` to handle all common UI states consistently:
+- `InitialState`: The default starting state.
+- `LoadingState`: For background/async operations.
+- `SuccessState<T>`: Contains the typed data.
+- `FailureState`: Contains the error message.
+
+### 📱 Responsive UI (`BaseResponsiveScreen`)
+Avoid manual `MediaQuery` checks. Simply override the builds you need:
+- `buildSmallScreen(context)`
+- `buildMediumScreen(context)` (Optional - defaults to Mobile)
+- `buildLargeScreen(context)` (Optional - defaults to Tablet)
+
+### 🛣️ Routing (`AppRouteModule`)
+Register new features in the router without touching the core `AppRouter`:
+1. Create a `FeatureRouteModule`.
+2. Define paths in `AppRoutes`.
+3. Add the module to `AppRouterFactory`.
+
+---
+
+## 🚀 Advanced Usage Patterns
+
+### 🛡️ Functional Error Handling
+We avoid throwing exceptions in the domain and presentation layers. Instead, we use the `Result<T>` pattern.
+
+#### The `Result` Pattern
+```dart
+Future<Result<Profile>> getProfile() async {
+  return executeOrFailure(() => _remoteDataSource.getProfile());
+}
+
+// Consuming in BLoC
+final result = await repository.getProfile();
+result.fold(
+  (success) => emit(SuccessState(data: success)),
+  (failure) => emit(FailureState(failure.message)),
+);
+```
+- **`executeOrFailure`**: A core utility that catches network/parse exceptions and converts them into typed `Failure` objects.
+
+### 💉 Type-Safe Dependency Injection
+We use **GetIt** for service location but prioritize **Constructor Injection** for testability.
+
+#### Registration
+```dart
+final getIt = GetIt.instance;
+
+void setupDependencies() {
+  // Data Sources
+  getIt.registerLazySingleton<ProfileApi>(() => ProfileApi(getIt<Dio>()));
+  
+  // Repositories (Interface binding)
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(getIt<ProfileApi>()),
+  );
+  
+  // BLoCs (Factory)
+  getIt.registerFactory(() => ProfileBloc(getIt<ProfileRepository>()));
+}
+```
+
+### 🛣️ Advanced Modular Routing
+Each feature manages its own routes and logic via `AppRouteModule`.
+
+#### Redirection & Deep Linking
+```dart
+class AuthRouteModule extends AppRouteModule {
+  @override
+  RouteModuleOptions get options => RouteModuleOptions(
+    initialLocation: '/login',
+    redirect: (context, state) {
+      if (!isLoggedIn && state.matchedLocation != '/login') return '/login';
+      return null;
+    },
+    deepLinks: [
+      DeepLinkMatcher.pathPrefix('/auth'),
+    ],
+  );
+}
+```
+
+### 📱 Adaptive Layouts (Deep Dive)
+The `BaseResponsiveScreen` provides a clean API for handling different form factors.
+
+#### Breakpoint Customization
+Use `ScreenBreakpointBuilder` for fine-grained control within a widget:
+```dart
+Widget build(BuildContext context) {
+  return ScreenBreakpointBuilder(
+    smallBuilder: (context) => const MobileLayout(),
+    mediumBuilder: (context) => const TabletLayout(),
+    largeBuilder: (context) => const DesktopLayout(),
+  );
+}
+```
+
+---
+
+## 🤖 AI-Powered Workflow
+This codebase is designed to work with specialized **Agents**. To use them:
+1. Load a skill (e.g., `Activate Skill: flutter-use-bloc`).
+2. Provide the requirements.
+3. The agent will generate code following the patterns defined in `AGENTS.md`.
+
+---
+
+## ✅ Quality & Testing
+Keep the codebase healthy by running these commands before every commit:
+
+```bash
+# Run all unit and widget tests
+flutter test
+
+# Run linter
+flutter analyze
+
+# Generate code (Retrofit, BLoC, etc.)
+dart run build_runner build --delete-conflicting-outputs
+```

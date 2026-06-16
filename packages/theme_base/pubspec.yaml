@@ -1,4 +1,5 @@
 name: theme_base
+resolution: workspace
 description: "A new Flutter project."
 version: 0.0.1
 homepage:
@@ -11,8 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc:
-  codebase:
-    path: ../..
+  codebase: any
 
 dev_dependencies:
   flutter_test:

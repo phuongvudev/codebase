@@ -65,11 +65,28 @@ final class ParseFailure extends Failure {
   const ParseFailure([super.message = 'Failed to parse response']);
 }
 
-// ── Cache ─────────────────────────────────────────────────────────────────────
+// ── Cache & Storage ─────────────────────────────────────────────────────────────
 
 /// A local-cache operation failed.
 final class CacheFailure extends Failure {
   const CacheFailure([super.message = 'Cache operation failed']);
+}
+
+/// A storage (database/file system) operation failed.
+final class StorageFailure extends Failure {
+  const StorageFailure(super.message);
+}
+
+/// A database-specific operation failed.
+final class DatabaseFailure extends Failure {
+  const DatabaseFailure(super.message);
+}
+
+// ── ML & OCR ──────────────────────────────────────────────────────────────────
+
+/// An OCR processing operation failed.
+final class OcrFailure extends Failure {
+  const OcrFailure(super.message);
 }
 
 // ── Business logic ────────────────────────────────────────────────────────────

@@ -1,0 +1,34 @@
+name: codebase
+packages:
+  - packages/*
+
+command:
+  bootstrap:
+    dependencies:
+      flutter_bloc: ^9.1.1
+      bloc: ^9.2.1
+      get_it: ^9.2.1
+      dio: ^5.9.2
+      retrofit: ^4.9.2
+      go_router: ^17.3.0
+      json_annotation: ^4.12.0
+      freezed_annotation: ^3.1.0
+      intl: ^0.20.2
+    devDependencies:
+      flutter_lints: ^6.0.0
+      build_runner: any
+      retrofit_generator: any
+      json_serializable: any
+      freezed: any
+      intl_utils: any
+
+scripts:
+  generate:
+    run: melos exec --depends-on="build_runner" -- "dart run build_runner build --delete-conflicting-outputs"
+    description: Run code generation for relevant packages.
+  test:
+    run: melos exec --dir-exists="test" -- "flutter test"
+    description: Run tests in packages that have a test folder.
+  analyze:
+    run: melos exec -- "flutter analyze"
+    description: Run static analysis across all packages.

@@ -1,4 +1,5 @@
 name: analytic_base
+resolution: workspace
 description: "Provider-agnostic analytics base layer for Flutter. Defines the domain contract, value objects, and BLoC for event tracking, screen logging, and user identification."
 version: 0.0.1
 homepage:
@@ -11,8 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc:
-  codebase:
-    path: ../..
+  codebase: any
 
 dev_dependencies:
   flutter_test:

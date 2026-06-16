@@ -3,13 +3,14 @@ name: flutter-use-melos
 description: Manage multi-package Flutter projects using Melos and Dart Pub Workspaces. Use for monorepos requiring shared dependency resolution, automated versioning, and cross-package scripting.
 metadata:
   model: models/gemini-3.1-pro-preview
-  last_modified: Wed, 12 Jun 2024 12:00:00 GMT
+  last_modified: Wed, 16 Jun 2024 12:00:00 GMT
 ---
 # Multi-Package Management with Melos
 
 ## Contents
 - [Prerequisites](#prerequisites)
 - [Workspace Configuration (Melos 7+)](#workspace-configuration-melos-7)
+- [Centralizing Dependency Versions](#centralizing-dependency-versions)
 - [Package Configuration](#package-configuration)
 - [Melos Scripts & Automation](#melos-scripts--automation)
 - [Workflow](#workflow)
@@ -17,7 +18,7 @@ metadata:
 
 ## Prerequisites
 
-- **Flutter SDK:** 3.38+ (or Dart 3.10+).
+- **Flutter SDK:** 3.44+ (or Dart 3.11+ for glob workspace support).
 - **Melos:** Install globally or add as a dev dependency (recommended for CI).
 
 ```bash
@@ -26,7 +27,7 @@ dart pub global activate melos
 
 ## Workspace Configuration (Melos 7+)
 
-Melos 7+ integrates natively with Dart Pub Workspaces. The configuration lives primarily in the root `pubspec.yaml`.
+Melos 7+ integrates natively with Dart Pub Workspaces. Configuration is split between `pubspec.yaml` (for native workspace and scripts) and `melos.yaml` (for Melos-specific features like version centralization).
 
 ```yaml
 # root pubspec.yaml
@@ -34,18 +35,41 @@ name: my_monorepo
 publish_to: none
 
 environment:
-  sdk: '>=3.10.0 <4.0.0'
+  sdk: '>=3.11.0 <4.0.0'
 
 workspace:
-  - apps/*
   - packages/*
 
 dev_dependencies:
   melos: ^7.3.0
 
 melos:
-  name: my_monorepo
+  scripts:
+    # Define scripts here so they are discoverable by 'melos run'
+    test:
+      run: melos exec --dir-exists="test" -- "flutter test"
 ```
+
+## Centralizing Dependency Versions
+
+Use `melos.yaml` to centralize dependency versions across all packages.
+
+```yaml
+# melos.yaml
+name: my_monorepo
+packages:
+  - packages/*
+
+command:
+  bootstrap:
+    dependencies:
+      dio: ^5.0.0
+      flutter_bloc: ^8.1.0
+    devDependencies:
+      build_runner: any
+```
+
+When you run `melos bootstrap`, Melos will ensure all packages use the versions defined here, preventing version mismatch.
 
 ## Package Configuration
 
@@ -57,14 +81,18 @@ name: core_logic
 version: 1.0.0
 
 environment:
-  sdk: '>=3.10.0 <4.0.0'
+  sdk: '>=3.11.0 <4.0.0'
 
-resolution: workspace # Essential for local path resolution without overrides
+resolution: workspace # Essential for native workspace support
+
+dependencies:
+  # Use 'any' or a matching constraint; melos bootstrap will manage this.
+  dio: any 
 ```
 
 ## Melos Scripts & Automation
 
-Define scripts in the root `pubspec.yaml` (under `melos:`) or `melos.yaml`. Use filters to optimize execution.
+Define scripts in the root `pubspec.yaml` (under `melos:`) to make them runable via `melos run`.
 
 ```yaml
 melos:
@@ -85,12 +113,12 @@ melos:
 ## Workflow
 
 ### Task Progress
-- [ ] **Step 1: Setup Workspace.** Define `workspace:` and `melos:` in the root `pubspec.yaml`.
-- [ ] **Step 2: Initialize Packages.** Create sub-packages in the defined workspace directories.
-- [ ] **Step 3: Enable Resolution.** Set `resolution: workspace` in all sub-package `pubspec.yaml` files.
-- [ ] **Step 4: Bootstrap.** Run `melos bootstrap` to link packages and install dependencies.
-- [ ] **Step 5: Define Scripts.** Add common tasks (build, test, lint) to the `melos:` section.
-- [ ] **Step 6: CI/CD.** Configure Melos in your CI environment for automated checks and publishing.
+- [x] **Step 1: Setup Workspace.** Define `workspace:` in the root `pubspec.yaml` and create `melos.yaml`.
+- [x] **Step 2: Initialize Packages.** Create sub-packages in the defined workspace directories.
+- [x] **Step 3: Enable Resolution.** Set `resolution: workspace` in all sub-package `pubspec.yaml` files.
+- [x] **Step 4: Centralize Versions.** Add common dependencies to `melos.yaml` under `command/bootstrap`.
+- [x] **Step 5: Bootstrap.** Run `melos bootstrap` to link packages and sync dependency versions.
+- [x] **Step 6: Define Scripts.** Add common tasks (build, test, lint) to the `melos:` section in `pubspec.yaml`.
 
 ## Common Commands
 
