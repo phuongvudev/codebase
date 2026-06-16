@@ -24,6 +24,15 @@ The project follows a **Hybrid Clean Architecture + Feature-First** approach. Mo
 
 ## ✨ Core Features
 
+### What this codebase can do
+- Build scalable Flutter features with a hybrid Clean Architecture + Feature-First structure.
+- Manage app state with BLoC and reusable base state patterns.
+- Resolve dependencies with GetIt for testable, decoupled modules.
+- Integrate REST APIs using Dio + Retrofit with generated, type-safe clients.
+- Support responsive UI layouts for small and large screens.
+- Handle runtime permissions with deterministic permission flows.
+- Enable localization with ARB files and generated localization classes.
+
 ### Responsive Presentation Layer
 The project provides a base foundation for building responsive screens that react to state changes and screen size breakpoints.
 
@@ -55,6 +64,19 @@ bloc.add(const RequestPermissionRequested(PermissionType.camera));
 
 ### Type-Safe Networking
 Leverages Retrofit and Dio for declarative API definitions with automated JSON serialization and centralized error handling.
+
+## 🤖 What AI agents can do
+
+AI agents in this repository can accelerate development workflows by:
+
+- Applying architecture best practices for new features and refactors.
+- Generating UI components, responsive layouts, and widget state behaviors.
+- Setting up and extending BLoC state management flows.
+- Implementing networking layers with Dio + Retrofit patterns.
+- Wiring and maintaining dependency injection with GetIt.
+- Adding localization, permissions, and routing setup.
+- Creating widget previews, widget tests, and integration tests.
+- Assisting with debugging, error-handling patterns, and iterative improvements.
 
 ## 📁 Project Structure
 
