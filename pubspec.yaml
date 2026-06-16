@@ -23,6 +23,8 @@ dependencies:
   intl: ^0.20.2
   permission_base:
     path: packages/permission_base
+  analytic_base:
+    path: packages/analytic_base
 
 dev_dependencies:
   flutter_test:
