@@ -62,7 +62,7 @@ final class AnalyticsBloc
     } catch (error) {
       emit(
         FailureState(
-          'Failed to identify user "${event.user.userId}": $error',
+          'Failed to identify analytics user: $error',
         ),
       );
     }
