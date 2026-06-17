@@ -28,6 +28,7 @@ dependencies:
   analytic_base: any
   crash_report_base: any
   theme_base: any
+  error_base: any
 
 dev_dependencies:
   flutter_test:

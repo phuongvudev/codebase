@@ -1,0 +1,17 @@
+name: error_base
+resolution: workspace
+description: "Shared error handling primitives for Flutter, including typed failures, result helpers, exception mapping, and presentation error boundaries."
+version: 0.0.1
+
+environment:
+  sdk: ^3.12.2
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
