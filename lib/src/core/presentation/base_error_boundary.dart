@@ -47,6 +47,11 @@ class BaseErrorBoundary extends StatefulWidget {
     super.key,
   });
 
+  /// Builds the protected subtree.
+  ///
+  /// This catches synchronous build-time exceptions only. For async or
+  /// event-driven failures, call [BaseErrorBoundary.of] and use the controller's
+  /// [BaseErrorBoundaryController.capture] method.
   final WidgetBuilder builder;
   final BaseErrorBoundaryController? controller;
   final BaseErrorFallbackBuilder? fallbackBuilder;
@@ -75,6 +80,8 @@ class BaseErrorBoundary extends StatefulWidget {
 class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
   late BaseErrorBoundaryController _controller;
   late bool _ownsController;
+  Object? _error;
+  StackTrace? _stackTrace;
 
   @override
   void initState() {
@@ -105,6 +112,7 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
   void _bindController(BaseErrorBoundaryController? controller) {
     _controller = controller ?? BaseErrorBoundaryController();
     _ownsController = controller == null;
+    _syncControllerState();
     _controller.addListener(_onControllerChanged);
   }
 
@@ -117,18 +125,21 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
 
   void _onControllerChanged() {
     if (mounted) {
-      setState(() {});
+      setState(_syncControllerState);
     }
   }
 
-  void _captureError(Object error, StackTrace stackTrace) {
-    widget.onError?.call(error, stackTrace);
+  void _syncControllerState() {
+    _error = _controller.error;
+    _stackTrace = _controller.stackTrace;
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _controller.capture(error, stackTrace);
-      }
-    });
+  void _captureBuildError(Object error, StackTrace stackTrace) {
+    widget.onError?.call(error, stackTrace);
+    _controller
+      .._error = error
+      .._stackTrace = stackTrace;
+    _syncControllerState();
   }
 
   Widget _buildFallback(
@@ -162,11 +173,11 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
 
   @override
   Widget build(BuildContext context) {
-    if (_controller.hasError) {
+    if (_error != null) {
       return _buildFallback(
         context,
-        _controller.error!,
-        _controller.stackTrace ?? StackTrace.empty,
+        _error!,
+        _stackTrace ?? StackTrace.empty,
       );
     }
 
@@ -177,7 +188,7 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
           try {
             return widget.builder(context);
           } catch (error, stackTrace) {
-            _captureError(error, stackTrace);
+            _captureBuildError(error, stackTrace);
             return _buildFallback(context, error, stackTrace);
           }
         },

@@ -44,15 +44,14 @@ void main() {
                 ),
               );
             },
-            builder:
-                (context) => TextButton(
-                  onPressed: () {
-                    BaseErrorBoundary.of(
-                      context,
-                    ).capture(StateError('manual failure'));
-                  },
-                  child: const Text('trigger'),
-                ),
+            builder: (context) => TextButton(
+              onPressed: () {
+                BaseErrorBoundary.of(
+                  context,
+                ).capture(StateError('manual failure'));
+              },
+              child: const Text('trigger'),
+            ),
           ),
         ),
       );
