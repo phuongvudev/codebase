@@ -30,7 +30,8 @@ class BaseErrorBoundaryController extends ChangeNotifier {
   /// Used internally by [BaseErrorBoundary] when a synchronous build error is
   /// already triggering an immediate fallback render in the same frame.
   /// Notifying listeners there would be redundant because the fallback is
-  /// returned immediately from the current build.
+  /// returned immediately from the current build. External callers should use
+  /// [capture] so listeners are notified as expected.
   void captureSilently(Object error, [StackTrace? stackTrace]) {
     _store(error, stackTrace);
   }
@@ -63,8 +64,10 @@ class BaseErrorBoundary extends StatefulWidget {
 
   /// Builds the protected subtree.
   ///
-  /// This catches synchronous build-time exceptions only. For async or
-  /// event-driven failures, call [BaseErrorBoundary.of] and use the controller's
+  /// This catches synchronous exceptions thrown by this callback only.
+  /// Descendant widget build failures are still handled by Flutter's own error
+  /// pipeline. For async or event-driven failures, call
+  /// [BaseErrorBoundary.of] and use the controller's
   /// [BaseErrorBoundaryController.capture] method.
   final WidgetBuilder builder;
   final BaseErrorBoundaryController? controller;
@@ -75,7 +78,8 @@ class BaseErrorBoundary extends StatefulWidget {
   ///
   /// Synchronous build failures stay on the fallback UI until either [retry] is
   /// called from the fallback, [controller.clear] is called, or these keys
-  /// change.
+  /// change. Treat these values as the dependencies that should retry the
+  /// protected build when they update.
   final List<Object?> resetKeys;
 
   static BaseErrorBoundaryController? maybeOf(BuildContext context) {
@@ -88,7 +92,7 @@ class BaseErrorBoundary extends StatefulWidget {
     final controller = maybeOf(context);
     assert(
       controller != null,
-      'BaseErrorBoundary.of() called with a context that does not contain a BaseErrorBoundary.',
+      'BaseErrorBoundary.of() called with a context that does not contain a BaseErrorBoundary in its widget tree. Wrap your widget with a BaseErrorBoundary ancestor.',
     );
     return controller!;
   }
