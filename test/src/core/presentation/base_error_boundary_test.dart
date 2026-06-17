@@ -25,9 +25,6 @@ void main() {
           ),
         ),
       );
-
-      await tester.pump();
-
       expect(find.text('Something went wrong'), findsOneWidget);
       expect(find.textContaining('boom'), findsOneWidget);
     });
@@ -51,6 +48,7 @@ void main() {
       expect(capturedError, isA<StateError>());
       expect(capturedError.toString(), contains('listener boom'));
       expect(capturedStackTrace, isNotNull);
+      expect(capturedStackTrace.toString(), isNotEmpty);
       expect(find.text('Something went wrong'), findsOneWidget);
     });
 

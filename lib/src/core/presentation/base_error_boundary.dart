@@ -29,6 +29,8 @@ class BaseErrorBoundaryController extends ChangeNotifier {
   ///
   /// Used internally by [BaseErrorBoundary] when a synchronous build error is
   /// already triggering an immediate fallback render in the same frame.
+  /// Notifying listeners there would be redundant because the fallback is
+  /// returned immediately from the current build.
   void captureSilently(Object error, [StackTrace? stackTrace]) {
     _store(error, stackTrace);
   }
@@ -193,7 +195,7 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
       return _buildFallback(
         context,
         _error!,
-        _stackTrace ?? StackTrace.empty,
+        _stackTrace ?? StackTrace.current,
       );
     }
 
