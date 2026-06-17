@@ -25,6 +25,14 @@ class BaseErrorBoundaryController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Stores an error without notifying listeners.
+  ///
+  /// Used internally by [BaseErrorBoundary] when a synchronous build error is
+  /// already triggering an immediate fallback render in the same frame.
+  void captureSilently(Object error, [StackTrace? stackTrace]) {
+    _store(error, stackTrace);
+  }
+
   void _store(Object error, [StackTrace? stackTrace]) {
     _error = error;
     _stackTrace = stackTrace ?? StackTrace.current;
@@ -60,6 +68,12 @@ class BaseErrorBoundary extends StatefulWidget {
   final BaseErrorBoundaryController? controller;
   final BaseErrorFallbackBuilder? fallbackBuilder;
   final BaseErrorListener? onError;
+
+  /// Resets the stored error when any value changes.
+  ///
+  /// Synchronous build failures stay on the fallback UI until either [retry] is
+  /// called from the fallback, [controller.clear] is called, or these keys
+  /// change.
   final List<Object?> resetKeys;
 
   static BaseErrorBoundaryController? maybeOf(BuildContext context) {
@@ -140,7 +154,7 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
 
   void _captureBuildError(Object error, StackTrace stackTrace) {
     widget.onError?.call(error, stackTrace);
-    _controller._store(error, stackTrace);
+    _controller.captureSilently(error, stackTrace);
     _syncControllerState();
   }
 

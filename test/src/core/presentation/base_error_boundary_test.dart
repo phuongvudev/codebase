@@ -51,6 +51,7 @@ void main() {
       expect(capturedError, isA<StateError>());
       expect(capturedError.toString(), contains('listener boom'));
       expect(capturedStackTrace, isNotNull);
+      expect(find.text('Something went wrong'), findsOneWidget);
     });
 
     testWidgets('supports retry after a manual capture', (tester) async {
