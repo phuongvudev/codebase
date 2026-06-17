@@ -126,6 +126,126 @@ Register new features in the router without touching the core `AppRouter`:
 2. Define paths in `AppRoutes`.
 3. Add the module to `AppRouterFactory`.
 
+### 🚨 Presentation Error Boundary (`BaseErrorBoundary`)
+Use `BaseErrorBoundary` to protect a presentation subtree when the UI itself can fail and you need a consistent fallback + retry path.
+
+#### What it catches
+- Synchronous exceptions thrown directly by the boundary `builder`
+- Errors captured manually through `BaseErrorBoundaryController.capture(...)`
+
+#### What it does not replace
+- **Domain errors**: keep returning `Result<T>` / `Failure`
+- **BLoC state errors**: keep emitting `FailureState`
+- **Framework-wide async errors**: continue reporting them through your global crash/error pipeline
+
+#### 1. Basic usage
+```dart
+BaseErrorBoundary(
+  builder: (_) => const ProfileContent(),
+)
+```
+
+#### 2. Custom fallback with retry
+```dart
+BaseErrorBoundary(
+  fallbackBuilder: (context, error, stackTrace, retry) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(error.toString()),
+          TextButton(
+            onPressed: retry,
+            child: const Text('Try again'),
+          ),
+        ],
+      ),
+    );
+  },
+  builder: (_) => const ProfileContent(),
+)
+```
+
+#### 3. Screen-level integration
+Wrap the unstable section instead of the whole app so the rest of the screen can keep working.
+
+```dart
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: BaseErrorBoundary(
+        onError: (error, stackTrace) {
+          // Forward to crash reporting.
+        },
+        builder: (_) => const ProfileContent(),
+      ),
+    );
+  }
+}
+```
+
+#### 4. Integration with BLoC
+Use the boundary for **presentation failures**, while BLoC continues to model expected business failures with states.
+
+```dart
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final boundaryController = BaseErrorBoundaryController();
+
+    return BaseErrorBoundary(
+      controller: boundaryController,
+      builder: (context) {
+        return BlocConsumer<ProfileBloc, BaseState<Profile>>(
+          listener: (context, state) {
+            if (state is FailureState<Profile>) {
+              // Optional: escalate only when the UI cannot recover inline.
+              boundaryController.capture(StateError(state.message));
+            }
+          },
+          builder: (context, state) {
+            if (state is LoadingState<Profile>) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is SuccessState<Profile>) {
+              return Text(state.data?.name ?? '');
+            }
+
+            if (state is FailureState<Profile>) {
+              return Text(state.message);
+            }
+
+            return const SizedBox.shrink();
+          },
+        );
+      },
+    );
+  }
+}
+```
+
+#### 5. Layer responsibilities: UI vs BLoC vs Domain
+- **Domain**: return typed results (`Result<T>`, `Failure`) for expected business/data problems.
+- **BLoC**: translate domain results into `BaseState` (`SuccessState`, `FailureState`, etc.). Avoid throwing for expected failures.
+- **UI**: use `BaseErrorBoundary` for rendering faults, bad widget assumptions, or event-driven presentation breakdowns that need a fallback shell.
+
+#### 6. When to use `resetKeys`
+Use `resetKeys` when a dependency change should automatically clear the captured boundary error and retry the protected subtree.
+
+```dart
+BaseErrorBoundary(
+  resetKeys: [userId, locale],
+  builder: (_) => ProfileDetails(userId: userId),
+)
+```
+
 ---
 
 ## 🚀 Advanced Usage Patterns
