@@ -19,6 +19,7 @@ export 'src/core/error/failures.dart';
 export 'src/core/network/dio_client.dart';
 
 // Core - Presentation
+export 'src/core/presentation/base_error_boundary.dart';
 export 'src/core/presentation/base_responsive_screen.dart';
 export 'src/core/presentation/base_responsive_widget.dart';
 export 'src/core/presentation/screen_breakpoint_builder.dart';
