@@ -1,0 +1,218 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+typedef BaseErrorFallbackWidgetBuilder =
+    Widget Function(
+      BuildContext context,
+      Object error,
+      StackTrace stackTrace,
+      VoidCallback retry,
+    );
+
+typedef BaseErrorListener =
+    void Function(Object error, StackTrace stackTrace);
+
+class BaseErrorBoundaryController extends ChangeNotifier {
+  Object? _error;
+  StackTrace? _stackTrace;
+
+  Object? get error => _error;
+  StackTrace? get stackTrace => _stackTrace;
+  bool get hasError => _error != null;
+
+  void capture(Object error, [StackTrace? stackTrace]) {
+    _store(error, stackTrace);
+    notifyListeners();
+  }
+
+  void _captureSilently(Object error, [StackTrace? stackTrace]) {
+    _store(error, stackTrace);
+  }
+
+  void _store(Object error, [StackTrace? stackTrace]) {
+    _error = error;
+    _stackTrace = stackTrace ?? StackTrace.current;
+  }
+
+  void clear() {
+    if (!hasError) {
+      return;
+    }
+
+    _error = null;
+    _stackTrace = null;
+    notifyListeners();
+  }
+}
+
+class BaseErrorBoundary extends StatefulWidget {
+  const BaseErrorBoundary({
+    required this.builder,
+    this.controller,
+    this.fallbackBuilder,
+    this.onError,
+    this.resetKeys = const <Object?>[],
+    super.key,
+  });
+
+  final WidgetBuilder builder;
+  final BaseErrorBoundaryController? controller;
+  final BaseErrorFallbackWidgetBuilder? fallbackBuilder;
+  final BaseErrorListener? onError;
+  final List<Object?> resetKeys;
+
+  static BaseErrorBoundaryController? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_BaseErrorBoundaryScope>()
+        ?.controller;
+  }
+
+  static BaseErrorBoundaryController of(BuildContext context) {
+    final controller = maybeOf(context);
+    assert(
+      controller != null,
+      'BaseErrorBoundary.of() called with a context that does not contain a BaseErrorBoundary in its widget tree. Wrap your widget with a BaseErrorBoundary ancestor.',
+    );
+    return controller!;
+  }
+
+  @override
+  State<BaseErrorBoundary> createState() => _BaseErrorBoundaryState();
+}
+
+class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
+  late BaseErrorBoundaryController _controller;
+  late bool _ownsController;
+  Object? _error;
+  StackTrace? _stackTrace;
+
+  @override
+  void initState() {
+    super.initState();
+    _bindController(widget.controller);
+  }
+
+  @override
+  void didUpdateWidget(covariant BaseErrorBoundary oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.controller != widget.controller) {
+      _unbindController();
+      _bindController(widget.controller);
+    }
+
+    if (!listEquals(oldWidget.resetKeys, widget.resetKeys)) {
+      _controller.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    _unbindController(disposeOwned: true);
+    super.dispose();
+  }
+
+  void _bindController(BaseErrorBoundaryController? controller) {
+    _controller = controller ?? BaseErrorBoundaryController();
+    _ownsController = controller == null;
+    _syncControllerState();
+    _controller.addListener(_onControllerChanged);
+  }
+
+  void _unbindController({bool disposeOwned = false}) {
+    _controller.removeListener(_onControllerChanged);
+    if (disposeOwned && _ownsController) {
+      _controller.dispose();
+    }
+  }
+
+  void _onControllerChanged() {
+    if (mounted) {
+      setState(_syncControllerState);
+    }
+  }
+
+  void _syncControllerState() {
+    _error = _controller.error;
+    _stackTrace = _controller.stackTrace;
+  }
+
+  void _captureBuildError(Object error, StackTrace stackTrace) {
+    widget.onError?.call(error, stackTrace);
+    _controller._captureSilently(error, stackTrace);
+    _syncControllerState();
+  }
+
+  Widget _buildFallback(
+    BuildContext context,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    if (widget.fallbackBuilder != null) {
+      return widget.fallbackBuilder!(
+        context,
+        error,
+        stackTrace,
+        _controller.clear,
+      );
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Text('Something went wrong'),
+            if (kDebugMode) ...<Widget>[
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return _buildFallback(
+        context,
+        _error!,
+        _stackTrace ?? StackTrace.current,
+      );
+    }
+
+    return _BaseErrorBoundaryScope(
+      controller: _controller,
+      child: Builder(
+        builder: (context) {
+          try {
+            return widget.builder(context);
+          } catch (error, stackTrace) {
+            _captureBuildError(error, stackTrace);
+            return _buildFallback(context, error, stackTrace);
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _BaseErrorBoundaryScope extends InheritedWidget {
+  const _BaseErrorBoundaryScope({
+    required this.controller,
+    required super.child,
+  });
+
+  final BaseErrorBoundaryController controller;
+
+  @override
+  bool updateShouldNotify(covariant _BaseErrorBoundaryScope oldWidget) {
+    return controller != oldWidget.controller;
+  }
+}
