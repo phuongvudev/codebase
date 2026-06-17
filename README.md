@@ -17,6 +17,7 @@ We utilize a modern, industry-standard tech stack (2024-2025) to ensure maximum 
 - **Responsive UI**: Custom `BaseResponsiveScreen` system for seamless adaptivity across mobile, tablet, and desktop.
 - **Localization**: Type-safe `S` class generation via `intl_utils`.
 - **Sitemap**: Automated codebase indexing via `flutter-scan-codebase-sitemap`.
+- **Workflow Handoff**: Post-implementation tracking via `flutter-task-management-followup` (PR + task + comment + note).
 
 ---
 
