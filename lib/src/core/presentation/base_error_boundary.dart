@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-typedef BaseErrorFallbackBuilder =
+typedef BaseErrorFallbackWidgetBuilder =
     Widget Function(
       BuildContext context,
       Object error,
@@ -32,7 +32,7 @@ class BaseErrorBoundaryController extends ChangeNotifier {
   /// Notifying listeners there would be redundant because the fallback is
   /// returned immediately from the current build. External callers should use
   /// [capture] so listeners are notified as expected.
-  void captureSilently(Object error, [StackTrace? stackTrace]) {
+  void _captureSilently(Object error, [StackTrace? stackTrace]) {
     _store(error, stackTrace);
   }
 
@@ -71,7 +71,7 @@ class BaseErrorBoundary extends StatefulWidget {
   /// [BaseErrorBoundaryController.capture] method.
   final WidgetBuilder builder;
   final BaseErrorBoundaryController? controller;
-  final BaseErrorFallbackBuilder? fallbackBuilder;
+  final BaseErrorFallbackWidgetBuilder? fallbackBuilder;
   final BaseErrorListener? onError;
 
   /// Resets the stored error when any value changes.
@@ -160,7 +160,7 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
 
   void _captureBuildError(Object error, StackTrace stackTrace) {
     widget.onError?.call(error, stackTrace);
-    _controller.captureSilently(error, stackTrace);
+    _controller._captureSilently(error, stackTrace);
     _syncControllerState();
   }
 
@@ -169,8 +169,13 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
     Object error,
     StackTrace stackTrace,
   ) {
-    if (widget.fallbackBuilder case final fallbackBuilder?) {
-      return fallbackBuilder(context, error, stackTrace, _controller.clear);
+    if (widget.fallbackBuilder != null) {
+      return widget.fallbackBuilder!(
+        context,
+        error,
+        stackTrace,
+        _controller.clear,
+      );
     }
 
     return Center(
