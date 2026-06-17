@@ -11,7 +11,7 @@ Use this workflow after completing any **feature** or **bug fix** to ensure deli
 
 ## Purpose
 
-Keep engineering, QA, and product aligned by publishing four required artefacts:
+Keep engineering, QA, and product aligned by publishing four required artifacts:
 1. Pull Request (PR)
 2. Task update (issue/ticket/card)
 3. Implementation comment
