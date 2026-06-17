@@ -25,6 +25,13 @@ class BaseErrorBoundaryController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Stores an error without notifying listeners.
+  ///
+  /// Used internally by [BaseErrorBoundary] when a synchronous build error is
+  /// already triggering an immediate fallback render in the same frame.
+  /// Notifying listeners there would be redundant because the fallback is
+  /// returned immediately from the current build. External callers should use
+  /// [capture] so listeners are notified as expected.
   void _captureSilently(Object error, [StackTrace? stackTrace]) {
     _store(error, stackTrace);
   }
@@ -55,10 +62,24 @@ class BaseErrorBoundary extends StatefulWidget {
     super.key,
   });
 
+  /// Builds the protected subtree.
+  ///
+  /// This catches synchronous exceptions thrown by this callback only.
+  /// Descendant widget build failures are still handled by Flutter's own error
+  /// pipeline. For async or event-driven failures, call
+  /// [BaseErrorBoundary.of] and use the controller's
+  /// [BaseErrorBoundaryController.capture] method.
   final WidgetBuilder builder;
   final BaseErrorBoundaryController? controller;
   final BaseErrorFallbackWidgetBuilder? fallbackBuilder;
   final BaseErrorListener? onError;
+
+  /// Resets the stored error when any value changes.
+  ///
+  /// Synchronous build failures stay on the fallback UI until either [retry] is
+  /// called from the fallback, [controller.clear] is called, or these keys
+  /// change. Treat these values as the dependencies that should retry the
+  /// protected build when they update.
   final List<Object?> resetKeys;
 
   static BaseErrorBoundaryController? maybeOf(BuildContext context) {
