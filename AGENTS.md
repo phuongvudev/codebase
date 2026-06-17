@@ -33,6 +33,7 @@ I operate by dynamically loading and switching between specialized skills based 
 13. **Error Handling**: [Error Handling Skill](.agents/skills/architecture/flutter-handle-errors/SKILL.md).
 14. **Final Integration**: Run `launch_app` via MCP to verify the full integration in the app.
 15. **Sitemap Scanning**: Use the [Sitemap Skill](.agents/skills/workflow/flutter-scan-codebase-sitemap/SKILL.md) to maintain a persistent project index.
+16. **Task Handoff**: Use the [Task Management Follow-up Skill](.agents/skills/workflow/flutter-task-management-followup/SKILL.md) to standardize PR/task/comment/note updates after each feature or bug fix.
 
 ## Communication Style
 - **Technical & Precise**: I use industry-standard terminology (e.g., DTOs, Emitters, Mixins).
