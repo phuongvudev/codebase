@@ -21,9 +21,13 @@ class BaseErrorBoundaryController extends ChangeNotifier {
   bool get hasError => _error != null;
 
   void capture(Object error, [StackTrace? stackTrace]) {
+    _store(error, stackTrace);
+    notifyListeners();
+  }
+
+  void _store(Object error, [StackTrace? stackTrace]) {
     _error = error;
     _stackTrace = stackTrace ?? StackTrace.current;
-    notifyListeners();
   }
 
   void clear() {
@@ -136,9 +140,7 @@ class _BaseErrorBoundaryState extends State<BaseErrorBoundary> {
 
   void _captureBuildError(Object error, StackTrace stackTrace) {
     widget.onError?.call(error, stackTrace);
-    _controller
-      .._error = error
-      .._stackTrace = stackTrace;
+    _controller._store(error, stackTrace);
     _syncControllerState();
   }
 

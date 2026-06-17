@@ -32,6 +32,27 @@ void main() {
       expect(find.textContaining('boom'), findsOneWidget);
     });
 
+    testWidgets('calls onError when builder throws', (tester) async {
+      Object? capturedError;
+      StackTrace? capturedStackTrace;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BaseErrorBoundary(
+            onError: (error, stackTrace) {
+              capturedError = error;
+              capturedStackTrace = stackTrace;
+            },
+            builder: (_) => throw StateError('listener boom'),
+          ),
+        ),
+      );
+
+      expect(capturedError, isA<StateError>());
+      expect(capturedError.toString(), contains('listener boom'));
+      expect(capturedStackTrace, isNotNull);
+    });
+
     testWidgets('supports retry after a manual capture', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
